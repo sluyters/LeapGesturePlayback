@@ -24,10 +24,8 @@ app.get('/files', function (req, res) {
       res.sendStatus(500)
       return console.error('Unable to scan directory: ' + err);
     }
-    console.log(recordingsDirectoryPath);
     // Send all the filenames to the client
     var data = { "files": files };
-    console.log(JSON.stringify(data));
     res.send(JSON.stringify(data));
   });
 })
@@ -46,7 +44,6 @@ app.post('/controls/play/:filename', function (req, res) {
         player.stop();
       }
       jsonData = JSON.parse(data);
-      console.log("created player");
       player = new RecordingPlayer(jsonData["data"], clients, true);
     } else {
       res.sendStatus(500)
@@ -59,7 +56,6 @@ app.post('/controls/start', function (req, res) {
   if (player !== null) {
     player.play();
   }
-  console.log('Start');
   res.sendStatus(200);
 
 })
@@ -68,7 +64,6 @@ app.post('/controls/pause', function (req, res) {
   if (player !== null) {
     player.stop();
   }
-  console.log('Pause');
   res.sendStatus(200);
 })
 
@@ -82,9 +77,9 @@ app.post('/controls/pause', function (req, res) {
 //   res.sendStatus(200);
 // })
 
-// http://localhost:3000
-app.listen(3000, function () {
-  console.log('Listening on port 3000!');
+// http://localhost:3001
+app.listen(3001, function () {
+  console.log('Listening on port 3001!');
 });
 // ================================================================
 

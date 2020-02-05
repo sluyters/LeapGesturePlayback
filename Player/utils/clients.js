@@ -43,7 +43,6 @@ class Clients {
     }
 
     sendToAllActiveClients(message) {
-        console.log(this.clients.length);
         for (var i = 0; i < this.clients.length; i++) {
             console.log('Client ' + i + ": " + this.clients[i]["background"] + ' ' + this.clients[i]["focused"]);
             if (this.clients[i]["background"] || this.clients[i]["focused"]) {
