@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Leap WebSocket JSON Viewer</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script>
+        var ws;
+        var recording = false;
+        var recordingData = [];
+        var saveOnStop = true;
+
+        /**
+         * Listener functions 
+         */
+        function focusListener(event) {
+            ws.send(JSON.stringify({ focused: true })); // claim focus
+        };
+        function blurListener(event) {
+            ws.send(JSON.stringify({ focused: false })); // relinquish focus
+        };
+
+        // File saving data
+        var baseFilename = "recording";
+        var separator = "-";
+        var currentId = 1;
+        var fileExtention = ".json";
+
+        // Support both the WebSocket and MozWebSocket objects
+        if ((typeof (WebSocket) == 'undefined') &&
+            (typeof (MozWebSocket) != 'undefined')) {
+            WebSocket = MozWebSocket;
+        }
+
+        // Create the socket with event handlers
+        function init() {
+            // Create and open the socket
+            ws = new WebSocket("ws://localhost:6437/v6.json");//use latest
+
+            // On successful connection
+            ws.onopen = function (event) {
+                var enableMessage = JSON.stringify({ enableGestures: true });
+                ws.send(enableMessage); // Enable gestures
+                ws.send(JSON.stringify({ focused: true })); // claim focus
+
+                window.addEventListener('focus', focusListener);
+                window.addEventListener('blur', blurListener);
+
+                document.getElementById("connectionStatus").classList.remove("badge-danger");
+                document.getElementById("connectionStatus").classList.add("badge-success");
+                document.getElementById("connectionStatus").innerText = "Connected";
+            };
+
+            // On message received
+            ws.onmessage = function (event) {
+                if (recording) {
+                    var obj = JSON.parse(event.data);
+                    if (obj.id) {
+                        recordingData.push(obj);
+                    }
+                }
+            };
+
+            // On socket close
+            ws.onclose = function (event) {
+                ws = null;
+                window.removeEventListener("focus", focusListener);
+                window.removeEventListener("blur", blurListener);
+                document.getElementById("connectionStatus").classList.remove("badge-success");
+                document.getElementById("connectionStatus").classList.add("badge-danger");
+                document.getElementById("connectionStatus").innerText = "Disconnected";
+            }
+
+            // On socket error
+            ws.onerror = function (event) {
+                console.log("Socket error.");
+            };
+        }
+
+        function saveConfig() {
+            baseFilename = document.getElementById("filename").value;
+            currentId = parseInt(document.getElementById("startId").value, 10);
+        }
+
+        function toggleSaveOnStop() {
+            saveOnStop = document.getElementById("saveOnStop").checked;
+        }
+
+        function toggleRecording() {
+            recording = !recording;
+
+            if (recording) {
+                recordingData = [];
+                document.getElementById("record").innerText = "Stop recording";
+                ws.send(JSON.stringify({ focused: true })); // Request focus
+                document.getElementById("download").disabled = true;
+            } else {
+                document.getElementById("record").innerText = "Start Recording";
+                ws.send(JSON.stringify({ focused: false })); // Relinquish focus
+                document.getElementById("download").disabled = false;
+                if (saveOnStop) {
+                    downloadRecording();
+                }
+            }
+        }
+
+        function resetRecording() {
+            recording = false;
+            recordingData = [];
+            document.getElementById("download").disabled = false;
+        }
+
+        function getFilename() {
+            var filename = baseFilename + separator + currentId + fileExtention;
+            currentId += 1;
+            return filename;
+        }
+
+        function downloadRecording() {
+            if (!recording) {
+                data_json = {
+                    "frames": recordingData.length,
+                    "data": recordingData
+                }
+                var link = document.createElement('a');
+                var filename = getFilename();
+                link.setAttribute('download', filename);
+                link.href = makeTextFile(JSON.stringify(data_json));
+                document.body.appendChild(link);
+                // wait for the link to be added to the document
+                window.requestAnimationFrame(function () {
+                    var event = new MouseEvent('click');
+                    link.dispatchEvent(event);
+                    document.body.removeChild(link);
+                });
+            }
+        }
+
+        var textFile = null;
+        function makeTextFile(text) {
+            var data = new Blob([text], { type: 'text/plain' });
+
+            // If we are replacing a previously generated file we need to
+            // manually revoke the object URL to avoid memory leaks.
+            if (textFile !== null) {
+                window.URL.revokeObjectURL(textFile);
+            }
+
+            textFile = window.URL.createObjectURL(data);
+
+            // returns a URL you can use as a hrefFF
+            return textFile;
+        };
+
+    </script>
+</head>
+
+<body onload="init();">
+    <div class="container">
+        <h1>LeapMotion Basic Frame Recorder</h1>
+    </div>
+    <div class="container">
+        <div class="form-group">
+            <label for="filename">Filename</label>
+            <input type="text" id="filename" class="form-control" placeholder="recording" />
+        </div>
+        <div class="form-group">
+            <label for="startId">Starting file ID</label>
+            <input type="number" id="startId" class="form-control" placeholder="1" />
+        </div>
+        <button id="saveConfig" class="btn btn-outline-info" onclick="saveConfig()">Save configuration</button>
+        <div class="form-check m-2">
+            <input type="checkbox" class="form-check-input" id="saveOnStop" onclick="toggleSaveOnStop() checked">
+            <label class="form-check-label" for="saveOnStop">Save recording on stop</label>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row d-flex justify-content-center m-2">
+            <button id="record" class="col-sm-6 btn btn-primary" onclick="toggleRecording()">Start recording</button>
+        </div>
+        <div class="row form-group d-flex justify-content-center m-2">
+            <button id="reset" class="col-sm-6 btn btn-outline-danger " onclick="resetRecording()">Reset
+                recording</button>
+        </div>
+        <div class="row form-group d-flex justify-content-center m-2">
+            <button id="download" class="col-sm-6 btn btn-outline-info" onclick="downloadRecording()">Download
+                recording</button>
+        </div>
+    </div>
+    <div id="connection" class="container">
+        WebSocket status <span id="connectionStatus" class="badge badge-danger">Disconnected</span>
+    </div>
+    <script
+        id="IntercomSettingsScriptTag">window.intercomSettings = { "email": "arslu.autres@gmail.com", "created_at": 1568899274, "user_id": 1565067, "is_beta": false, "is_developer": true, "first_name": null, "last_name": null, "username": "sluyters", "posts": 0, "replies": 0, "latest_sdk_version": "3.2.1.45911", "sdk_downloaded": true, "docs_visited": true, "forums_visited": false, "unsubscribed_from_emails": true, "user_hash": "7a4ef1ad7fd694ab206c7816978c601581a3a7833a91990c65400ef1d103019d", "app_id": "1ce21b3d765e5db6de6230edff01f1498f6c369e" }; (function () { var w = window; var ic = w.Intercom; if (typeof ic === "function") { ic('reattach_activator'); ic('update', intercomSettings); } else { var d = document; var i = function () { i.c(arguments) }; i.q = []; i.c = function (args) { i.q.push(args) }; w.Intercom = i; function l() { var s = d.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = 'https://widget.intercom.io/widget/1ce21b3d765e5db6de6230edff01f1498f6c369e'; var x = d.getElementsByTagName('script')[0]; x.parentNode.insertBefore(s, x); } if (w.attachEvent) { w.attachEvent('onload', l); } else { w.addEventListener('load', l, false); } }; })()</script>
+</body>
+
+</html>
