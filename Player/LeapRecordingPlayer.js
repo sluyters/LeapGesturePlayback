@@ -1,64 +1,93 @@
+const path = require('path');
+const fs = require('fs');
+const express = require('express');
 const WebSocketServer = require('websocket').server;
 const http = require('http');
-let recordingData = require('./recordings/recording.json');
+const Clients = require('./utils/clients').Clients;
+const RecordingPlayer = require('./utils/player').RecordingPlayer;
 
-/**
- * Class for storing a list of all clients
- */
-class Clients {
-  constructor() {
-    this.clients = [];
-  }
+// ================================================================
+const app = express();
 
-  isEmpty() {
-    console.log(this.clients.length);
-    return (this.clients.length === 0);
-  }
+const recordingsDirectoryPath = path.join(__dirname, 'recordings');
 
-  addClient(connection) {
-    console.log('Adding client');
-    var clientInfo = {
-      "connection": connection,
-      "background": true,
-      "focused": true,
-      "optimizeHMD": false,
-      "enableGestures": false
+var player = null;
+// var loop = false;
+
+app.get('/', function (req, res) {
+  res.sendFile(path.join(__dirname + '/index.html'));
+});
+
+app.get('/files', function (req, res) {
+  fs.readdir(recordingsDirectoryPath, function (err, files) {
+    if (err) {
+      res.sendStatus(500)
+      return console.error('Unable to scan directory: ' + err);
     }
+    console.log(recordingsDirectoryPath);
+    // Send all the filenames to the client
+    var data = { "files": files };
+    console.log(JSON.stringify(data));
+    res.send(JSON.stringify(data));
+  });
+})
 
-    this.clients.push(clientInfo)
-  }
+app.post('/files/:filename', function (req, res) {
+  var filename = req.params.filename;
+})
 
-  updateClient(connection, attribute, value) {
-    console.log('Updating client - "' + attribute + '": ' + value);
-    for (var i = 0; i < this.clients.length; i++) {
-      if (this.clients[i]["connection"] === connection) {
-        this.clients[i][attribute] = value;
+app.post('/controls/play/:filename', function (req, res) {
+  var filename = req.params.filename;
+  var filePath = path.join(recordingsDirectoryPath, filename);
+  fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
+    if (!err) {
+      res.sendStatus(200);
+      if (player !== null) {
+        player.stop();
       }
+      jsonData = JSON.parse(data);
+      console.log("created player");
+      player = new RecordingPlayer(jsonData["data"], clients, true);
+    } else {
+      res.sendStatus(500)
+      console.log(err);
     }
-  }
+  });
+})
 
-  removeClient(connection) {
-    console.log('Removing client');
-    for (var i = 0; i < this.clients.length; i++) {
-      if (this.clients[i]["connection"] === connection) {
-        this.clients.splice(i, 1);
-      }
-    }
+app.post('/controls/start', function (req, res) {
+  if (player !== null) {
+    player.play();
   }
+  console.log('Start');
+  res.sendStatus(200);
 
-  sendToAllActiveClients(message) {
-    console.log(this.clients.length);
-    for (var i = 0; i < this.clients.length; i++) {
-      console.log('Client ' + i + ": " + this.clients[i]["background"] + ' ' + this.clients[i]["focused"]);
-      if (this.clients[i]["background"] || this.clients[i]["focused"]) {
-        console.log('Sending to client ' + i);
-        this.clients[i]["connection"].sendUTF(message);
-      }
-    }
+})
+
+app.post('/controls/pause', function (req, res) {
+  if (player !== null) {
+    player.stop();
   }
-}
+  console.log('Pause');
+  res.sendStatus(200);
+})
 
-var loopStarted = false;
+// // /controls/repeat?enabled=true
+// app.post('/controls/repeat', function (req, res) {
+//   loop = JSON.parse(req.query.enabled);
+//   if (player !== null) {
+//     player.setLoop(loop);
+//   }
+//   console.log('Repeat: ' + JSON.stringify(loop));
+//   res.sendStatus(200);
+// })
+
+// http://localhost:3000
+app.listen(3000, function () {
+  console.log('Listening on port 3000!');
+});
+// ================================================================
+
 
 // Port and ip of the websocket server
 const webSocketsServerPort = 6437;
@@ -84,11 +113,6 @@ var clients = new Clients();
 wsServer.on('request', function (request) {
   // Accept request
   var wsConnection = request.accept(null, request.origin);
-
-  if (!loopStarted) {
-    infiniteLoop(0, recordingData["data"]);
-    loopStarted = true;
-  }
 
   // Add client to list of clients
   clients.addClient(wsConnection)
@@ -136,40 +160,4 @@ wsServer.on('request', function (request) {
       }
     }
   });
-
-  // client.on('connect', function(connection) {
-  //     console.log('WebSocket client to LeapServer connected');
-  //     connection.on('error', function(error) {
-  //         console.log("Connection on LeapServer Error: " + error.toString());
-  //     });
-  //     connection.on('close', function() {
-  //         console.log('echo-protocol Connection Closed');
-  //     });
-  //     connection.on('message', function(message) {
-  //         if(needCloseLeapConnection === true) {
-  //             connection.close();
-  //         } else {
-  //             if (message.type === 'utf8') {
-  //                 wsConnection.sendUTF(message.utf8Data);
-  //                 //console.log("Received: '" + message.utf8Data + "'");
-  //             }
-  //         }
-  //     });
-
-  //     connection.sendUTF("{\"enableGestures\": true}");
-  // });
-
-  //client.connect('ws://localhost:6437/');
-
 });
-
-function infiniteLoop(n, frames) {
-  if (n >= frames.length) {
-    n = 0;
-  }
-  data = frames[n];
-  clients.sendToAllActiveClients(JSON.stringify(data))
-  setTimeout(function () {
-    infiniteLoop(n + 1, frames);
-  }, 10);
-}

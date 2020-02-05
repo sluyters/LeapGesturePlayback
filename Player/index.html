@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>LeapMotion Recording Player</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script>
+        // TODO
+        // fetch("/test").then(res => {...});
+        var url = "http://localhost:3000";
+        var repeat = false;
+        var pause = true;
+        var selectedFileId = "";
+
+
+        function getFiles() {
+            fetch(url + "/files", {
+                method: 'GET'
+            }).then((res) => {
+                return res.json();
+            }).then((jsonData) => {
+                var files = jsonData["files"];
+                displayFiles(files);
+                console.log(JSON.stringify(jsonData));
+            }).catch((err) => {
+                console.log(JSON.stringify(err));
+            })
+        }
+
+        function displayFiles(files) {
+            // Remove all child elements
+            const containerNode = document.getElementById("fileList");
+            while (containerNode.firstChild) {
+                containerNode.removeChild(containerNode.firstChild);
+            }
+
+            selectFileId = "";
+
+            // Add new child elements
+            for (var i = 0; i < files.length; i++) {
+                containerNode.innerHTML += getFileHtml(files[i], i + 1);
+            }
+        }
+
+        function getFileHtml(filename, idNumber) {
+            var id = `file-${idNumber}`
+            return `<button type="button" id="${id}" class="list-group-item list-group-item-action" onclick="selectFile(this.id)">${filename}</button>`
+        }
+
+        function selectFile(nodeId) {
+            var selectedNode = document.getElementById(nodeId);
+            var newSelectedFile = selectedNode.innerText;
+            if (nodeId !== selectedFileId) {
+                if (selectedFileId !== "") {
+                    var previousSelectedNode = document.getElementById(selectedFileId);
+                    previousSelectedNode.classList.remove("active");
+
+                }
+                selectedNode.classList.add("active");
+                selectedFileId = nodeId;
+
+                fetch(url + "/controls/play/" + newSelectedFile, {
+                    method: 'POST'
+                }).then((res) => {
+                    if (!pause) {
+                        document.getElementById("play").innerText = "Play";
+                        pause = true;
+                    }
+                }).catch((err) => {
+                    console.log(JSON.stringify(err));
+                })
+            }
+        }
+
+        function togglePlay() {
+            pause = !pause;
+            if (pause) {
+                fetch(url + "/controls/pause", {
+                    method: 'POST'
+                }).then((res) => {
+                    document.getElementById("play").innerText = "Play";
+                }).catch((err) => {
+                    console.log(JSON.stringify(err));
+                    pause = false;
+                })
+            } else {
+                fetch(url + "/controls/start", {
+                    method: 'POST'
+                }).then((res) => {
+                    document.getElementById("play").innerText = "Pause";
+                }).catch((err) => {
+                    console.log(JSON.stringify(err));
+                    pause = true;
+                })
+            }
+        }
+
+    </script>
+
+</head>
+
+<body>
+    <div class="container">
+        <h1>LeapMotion Recording Player</h1>
+    </div>
+    <div class="container">
+        <div>
+            <h3>Files available <button type="button" class="btn btn-secondary" onclick="getFiles()">Refresh</button>
+            </h3>
+        </div>
+        <div id="fileList" class="list-group">
+            <button type="button" class="list-group-item list-group-item-action">Dapibus ac facilisis in</button>
+            <button type="button" class="list-group-item list-group-item-action">Morbi leo risus</button>
+            <button type="button" class="list-group-item list-group-item-action">Porta ac consectetur ac</button>
+            <button type="button" class="list-group-item list-group-item-action" disabled>Vestibulum at eros</button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row d-flex justify-content-center m-2">
+            <button id="play" class="col-sm-6 btn btn-primary" onclick="togglePlay()">Play</button>
+        </div>
+    </div>
+</body>
+
+</html>
