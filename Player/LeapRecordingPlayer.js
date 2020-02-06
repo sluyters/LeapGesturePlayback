@@ -9,7 +9,8 @@ const RecordingPlayer = require('./utils/player').RecordingPlayer;
 // ================================================================
 const app = express();
 
-const recordingsDirectoryPath = path.join(__dirname, 'recordings');
+var defaultPath = path.join(__dirname, 'recordings');
+var recordingsDirectoryPath = defaultPath;
 
 var player = null;
 // var loop = false;
@@ -18,7 +19,13 @@ app.get('/', function (req, res) {
   res.sendFile(path.join(__dirname + '/index.html'));
 });
 
+// /files?path="pathToFile"
 app.get('/files', function (req, res) {
+  if (req.query.path !== "") {
+    recordingsDirectoryPath = req.query.path;
+  } else {
+    recordingsDirectoryPath = defaultPath;
+  }
   fs.readdir(recordingsDirectoryPath, function (err, files) {
     if (err) {
       res.sendStatus(500)
@@ -28,10 +35,6 @@ app.get('/files', function (req, res) {
     var data = { "files": files };
     res.send(JSON.stringify(data));
   });
-})
-
-app.post('/files/:filename', function (req, res) {
-  var filename = req.params.filename;
 })
 
 app.post('/controls/play/:filename', function (req, res) {
@@ -66,16 +69,6 @@ app.post('/controls/pause', function (req, res) {
   }
   res.sendStatus(200);
 })
-
-// // /controls/repeat?enabled=true
-// app.post('/controls/repeat', function (req, res) {
-//   loop = JSON.parse(req.query.enabled);
-//   if (player !== null) {
-//     player.setLoop(loop);
-//   }
-//   console.log('Repeat: ' + JSON.stringify(loop));
-//   res.sendStatus(200);
-// })
 
 // http://localhost:3001
 app.listen(3001, function () {

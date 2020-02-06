@@ -6,8 +6,6 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <script>
-        // TODO
-        // fetch("/test").then(res => {...});
         var url = "http://localhost:3001";
         var repeat = false;
         var pause = true;
@@ -15,7 +13,8 @@
 
 
         function getFiles() {
-            fetch(url + "/files", {
+            var path = document.getElementById("path").value;
+            fetch(url + "/files?path=" + path, {
                 method: 'GET'
             }).then((res) => {
                 return res.json();
@@ -73,15 +72,6 @@
             }
         }
 
-        // function toggleRepeat() {
-        //     repeat = document.getElementById("repeat").checked;
-        //     fetch(url + "/controls/repeat?enabled=" + JSON.stringify(repeat), {
-        //         method: 'POST'
-        //     }).catch((err) => {
-        //         console.log(JSON.stringify(err));
-        //     })
-        // }
-
         function togglePlay() {
             pause = !pause;
             if (pause) {
@@ -115,18 +105,19 @@
     </div>
     <div class="container">
         <div>
-            <h3>Files available <button type="button" class="btn btn-secondary" onclick="getFiles()">Refresh</button>
-            </h3>
+            <h3>Files available </h3>
+        </div>
+        <div class="form-group row">
+            <div class="col-sm-10">
+                <input type="text" id="path" class="form-control" placeholder="path" />
+            </div>
+            <div class="col-sm-2">
+                <button type="button" class="form-control btn btn-secondary" onclick="getFiles()">Refresh</button>
+            </div>
         </div>
         <div id="fileList" class="list-group">
         </div>
     </div>
-    <!-- <div class="container">
-        <div class="form-check m-2">
-            <input type="checkbox" class="form-check-input" id="repeat" onclick="toggleRepeat()">
-            <label class="form-check-label" for="repeat">Repeat</label>
-        </div>
-    </div> -->
     <div class="container">
         <div class="row d-flex justify-content-center m-2">
             <button id="play" class="col-sm-6 btn btn-primary" onclick="togglePlay()">Play</button>
