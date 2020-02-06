@@ -37,9 +37,18 @@
             selectedFileId = "";
 
             // Add new child elements
-            for (var i = 0; i < files.length; i++) {
-                containerNode.innerHTML += getFileHtml(files[i], i + 1);
+            if (files.length == 0) {
+                containerNode.innerHTML += getNoResultHtml();
+            } else {
+                for (var i = 0; i < files.length; i++) {
+                    containerNode.innerHTML += getFileHtml(files[i], i + 1);
+                }
             }
+        }
+
+        function getNoResultHtml() {
+            var text = "No file"
+            return `<button type="button" id="noFile" class="list-group-item list-group-item-action" onclick="selectFile(this.id)" disabled>${text}</button>`
         }
 
         function getFileHtml(filename, idNumber) {
@@ -108,7 +117,7 @@
 
 </head>
 
-<body>
+<body onload="getFiles()">
     <div class="container">
         <h1>LeapMotion Recording Player</h1>
     </div>

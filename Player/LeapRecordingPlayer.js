@@ -106,7 +106,11 @@ app.get('/files', function (req, res) {
       return console.error('Unable to scan directory: ' + err);
     }
     // Send all the filenames to the client
-    var data = { "files": files };
+    const EXTENSION = ".json";
+    var filteredFiles = files.filter(function(file) {
+      return path.extname(file).toLowerCase() === EXTENSION;
+    });
+    var data = { "files": filteredFiles };
     res.send(JSON.stringify(data));
   });
 })
