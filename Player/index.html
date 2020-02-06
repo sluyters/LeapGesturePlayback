@@ -72,6 +72,15 @@
             }
         }
 
+        function toggleFocusOverride() {
+            var focusOverride = document.getElementById("focusOverride").checked;
+            fetch(url + "/controls/focus?override=" + focusOverride, {
+                method: 'POST'
+            }).catch((err) => {
+                console.log(JSON.stringify(err));
+            })
+        }
+
         function togglePlay() {
             pause = !pause;
             if (pause) {
@@ -119,6 +128,10 @@
         </div>
     </div>
     <div class="container">
+        <div class="form-check m-2">
+            <input type="checkbox" class="form-check-input" id="focusOverride" onclick="toggleFocusOverride()">
+            <label class="form-check-label" for="focusOverride">Override focus</label>
+        </div>
         <div class="row d-flex justify-content-center m-2">
             <button id="play" class="col-sm-6 btn btn-primary" onclick="togglePlay()">Play</button>
         </div>

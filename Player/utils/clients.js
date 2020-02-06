@@ -4,6 +4,11 @@
 class Clients {
     constructor() {
         this.clients = [];
+        this.focusOverride = false;
+    }
+
+    setFocusOverride(focusOverride) {
+        this.focusOverride = focusOverride;
     }
 
     isEmpty() {
@@ -39,6 +44,22 @@ class Clients {
             if (this.clients[i]["connection"] === connection) {
                 this.clients.splice(i, 1);
             }
+        }
+    }
+
+
+    sendToClients(message) {
+        if (this.focusOverride) {
+            this.sendToAllClients(message);
+        } else {
+            this.sendToAllActiveClients(message);
+        }
+    }
+
+    sendToAllClients(message) {
+        for (var i = 0; i < this.clients.length; i++) {
+            console.log('Sending to client ' + i);
+            this.clients[i]["connection"].sendUTF(message);
         }
     }
 

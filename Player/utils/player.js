@@ -28,7 +28,7 @@ class RecordingPlayer {
             }
         }
         var data = this.frames[this.currentFrame++];
-        this.clients.sendToAllActiveClients(JSON.stringify(data))
+        this.clients.sendToClients(JSON.stringify(data))
         if (!this.stopped) {
             var _this = this;
             setTimeout(function () {
