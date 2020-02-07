@@ -4,6 +4,7 @@
   "description": "",
   "main": "LeapRecordingPlayer.js",
   "scripts": {
+    "start": "node ./LeapRecordingPlayer.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

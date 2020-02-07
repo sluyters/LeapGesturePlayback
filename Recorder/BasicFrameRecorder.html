@@ -11,21 +11,17 @@
         var recordingData = [];
         var saveOnStop = true;
 
-        /**
-         * Listener functions 
-         */
-        function focusListener(event) {
-            ws.send(JSON.stringify({ focused: true })); // claim focus
-        };
-        function blurListener(event) {
-            ws.send(JSON.stringify({ focused: false })); // relinquish focus
-        };
-
-        // File saving data
         var baseFilename = "recording";
         var separator = "-";
         var currentId = 1;
         var fileExtention = ".json";
+
+        function focusListener(event) {
+            ws.send(JSON.stringify({ focused: true })); // Claim focus
+        };
+        function blurListener(event) {
+            ws.send(JSON.stringify({ focused: false })); // Relinquish focus
+        };
 
         // Support both the WebSocket and MozWebSocket objects
         if ((typeof (WebSocket) == 'undefined') &&
@@ -35,14 +31,21 @@
 
         // Create the socket with event handlers
         function init() {
+            // Listen to spacebar press
+            document.body.onkeyup = function (e) {
+                if (e.keyCode == 32 || e.key === ' ') {
+                    toggleRecording();
+                }
+            }
+
             // Create and open the socket
-            ws = new WebSocket("ws://localhost:6437/v6.json");//use latest
+            ws = new WebSocket("ws://localhost:6437/v6.json");
 
             // On successful connection
             ws.onopen = function (event) {
                 var enableMessage = JSON.stringify({ enableGestures: true });
                 ws.send(enableMessage); // Enable gestures
-                ws.send(JSON.stringify({ focused: true })); // claim focus
+                ws.send(JSON.stringify({ focused: true })); // Claim focus
 
                 window.addEventListener('focus', focusListener);
                 window.addEventListener('blur', blurListener);
@@ -108,7 +111,9 @@
         function resetRecording() {
             recording = false;
             recordingData = [];
-            document.getElementById("download").disabled = false;
+            document.getElementById("record").innerText = "Start Recording";
+            document.getElementById("download").disabled = true;
+            ws.send(JSON.stringify({ focused: false })); // Relinquish focus
         }
 
         function getFilename() {
@@ -128,7 +133,8 @@
                 link.setAttribute('download', filename);
                 link.href = makeTextFile(JSON.stringify(data_json));
                 document.body.appendChild(link);
-                // wait for the link to be added to the document
+                
+                // Wait for the link to be added to the document
                 window.requestAnimationFrame(function () {
                     var event = new MouseEvent('click');
                     link.dispatchEvent(event);
@@ -141,15 +147,14 @@
         function makeTextFile(text) {
             var data = new Blob([text], { type: 'text/plain' });
 
-            // If we are replacing a previously generated file we need to
-            // manually revoke the object URL to avoid memory leaks.
+            // If we are replacing a previously generated file we need to manually revoke the object URL to avoid memory leaks.
             if (textFile !== null) {
                 window.URL.revokeObjectURL(textFile);
             }
 
             textFile = window.URL.createObjectURL(data);
 
-            // returns a URL you can use as a hrefFF
+            // Returns a URL
             return textFile;
         };
 
@@ -172,7 +177,7 @@
         <button id="saveConfig" class="btn btn-outline-info" onclick="saveConfig()">Save configuration</button>
         <div class="form-check m-2">
             <input type="checkbox" class="form-check-input" id="saveOnStop" onclick="toggleSaveOnStop()" checked>
-            <label class="form-check-label" for="saveOnStop">Save recording on stop</label>
+            <label class="form-check-label" for="saveOnStop">Download recording on stop</label>
         </div>
     </div>
     <div class="container">
