@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Basic LeapMotion Frame Recorder</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body onload="init();">
+    <div class="container">
+        <h1>Basic LeapMotion Frame Recorder</h1>
+    </div>
+    <div class="container">
+        <div class="form-group">
+            <label for="filename">Filename</label>
+            <input type="text" id="filename" class="form-control" placeholder="recording" />
+        </div>
+        <div class="form-group">
+            <label for="startId">Starting file ID</label>
+            <input type="number" id="startId" class="form-control" placeholder="1" />
+        </div>
+        <button id="saveConfig" class="btn btn-outline-info" onclick="saveConfig()">Save configuration</button>
+        <div class="form-check m-2">
+            <input type="checkbox" class="form-check-input" id="saveOnStop" onclick="toggleSaveOnStop()" checked>
+            <label class="form-check-label" for="saveOnStop">Download recording on stop</label>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row d-flex justify-content-center m-2">
+            <button id="record" class="col-sm-6 btn btn-primary" onclick="toggleRecording()">Start recording</button>
+        </div>
+        <div class="row form-group d-flex justify-content-center m-2">
+            <button id="reset" class="col-sm-6 btn btn-outline-danger " onclick="resetRecording()">Reset
+                recording</button>
+        </div>
+        <div class="row form-group d-flex justify-content-center m-2">
+            <button id="download" class="col-sm-6 btn btn-outline-info" onclick="downloadRecording()">Download
+                recording</button>
+        </div>
+    </div>
+    <div class="container">
+        <div id="playback-container" class="rounded overflow-hidden mb-2"></div>
+    </div>
+    <div id="connection" class="container">
+        WebSocket status <span id="connectionStatus" class="badge badge-danger">Disconnected</span>
+    </div>
+
+    <!-- Javascript -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.min.js"></script>
+    <script type="text/javascript" src="js/lib/TrackballControls.js"></script>
+    <script type="text/javascript" src="js/lib/leap-0.6.4.js"></script>
+    <script type="text/javascript" src="js/lib/leap-plugins-0.1.12.js"></script>
+    <script type="text/javascript" src="js/lib/leap.rigged-hand-0.1.7.js"></script>
+    <script type="text/javascript" src="js/preview.js"></script>
+    <script type="text/javascript" src="js/recorder.js"></script>
+</body>
+
+</html>

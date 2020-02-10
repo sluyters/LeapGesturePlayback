@@ -1,3 +1,5 @@
 Player/recordings/*
 Player/package-lock.json
 Player/node_modules/
+Recorder/package-lock.json
+Recorder/node_modules/

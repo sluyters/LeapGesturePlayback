@@ -66,7 +66,6 @@ wsServer.on('request', function (request) {
   });
 
   wsConnection.on('message', function (message) {
-    console.log('Received a message from client');
     if (message.type === 'utf8') {
       var data = message.utf8Data;
       var obj = JSON.parse(data);
@@ -88,6 +87,8 @@ wsServer.on('request', function (request) {
 
 // ================================================================
 const app = express();
+
+app.use(express.static('public'));
 
 app.get('/', function (req, res) {
   res.sendFile(path.join(__dirname + '/index.html'));
@@ -118,7 +119,6 @@ app.get('/files', function (req, res) {
 // e.g.: /controls/focus?override=true
 app.post('/controls/focus', function (req, res) {
   var focusOverride = JSON.parse(req.query.override);
-  console.log(focusOverride)
   clients.setFocusOverride(focusOverride);
   res.sendStatus(200);
 
@@ -158,6 +158,6 @@ app.post('/controls/pause', function (req, res) {
 
 // http://localhost:3001
 app.listen(3001, function () {
-  console.log('Listening on port 3001!');
+  console.log('Server available at http://localhost:3001');
 });
 // ================================================================

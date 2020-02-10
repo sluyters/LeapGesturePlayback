@@ -5,116 +5,7 @@
     <title>LeapMotion Recording Player</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <script>
-        var url = "http://localhost:3001";
-        var repeat = false;
-        var pause = true;
-        var selectedFileId = "";
-
-
-        function getFiles() {
-            var path = document.getElementById("path").value;
-            fetch(url + "/files?path=" + path, {
-                method: 'GET'
-            }).then((res) => {
-                return res.json();
-            }).then((jsonData) => {
-                var files = jsonData["files"];
-                displayFiles(files);
-                console.log(JSON.stringify(jsonData));
-            }).catch((err) => {
-                console.log(JSON.stringify(err));
-            })
-        }
-
-        function displayFiles(files) {
-            // Remove all child elements
-            const containerNode = document.getElementById("fileList");
-            while (containerNode.firstChild) {
-                containerNode.removeChild(containerNode.firstChild);
-            }
-
-            selectedFileId = "";
-
-            // Add new child elements
-            if (files.length == 0) {
-                containerNode.innerHTML += getNoResultHtml();
-            } else {
-                for (var i = 0; i < files.length; i++) {
-                    containerNode.innerHTML += getFileHtml(files[i], i + 1);
-                }
-            }
-        }
-
-        function getNoResultHtml() {
-            var text = "No file"
-            return `<button type="button" id="noFile" class="list-group-item list-group-item-action" onclick="selectFile(this.id)" disabled>${text}</button>`
-        }
-
-        function getFileHtml(filename, idNumber) {
-            var id = `file-${idNumber}`
-            return `<button type="button" id="${id}" class="list-group-item list-group-item-action" onclick="selectFile(this.id)">${filename}</button>`
-        }
-
-        function selectFile(nodeId) {
-            var selectedNode = document.getElementById(nodeId);
-            var newSelectedFile = selectedNode.innerText;
-            if (nodeId !== selectedFileId) {
-                if (selectedFileId !== "") {
-                    var previousSelectedNode = document.getElementById(selectedFileId);
-                    previousSelectedNode.classList.remove("active");
-
-                }
-                selectedNode.classList.add("active");
-                selectedFileId = nodeId;
-
-                fetch(url + "/controls/play/" + newSelectedFile, {
-                    method: 'POST'
-                }).then((res) => {
-                    if (!pause) {
-                        document.getElementById("play").innerText = "Play";
-                        pause = true;
-                    }
-                }).catch((err) => {
-                    console.log(JSON.stringify(err));
-                })
-            }
-        }
-
-        function toggleFocusOverride() {
-            var focusOverride = document.getElementById("focusOverride").checked;
-            fetch(url + "/controls/focus?override=" + focusOverride, {
-                method: 'POST'
-            }).catch((err) => {
-                console.log(JSON.stringify(err));
-            })
-        }
-
-        function togglePlay() {
-            pause = !pause;
-            if (pause) {
-                fetch(url + "/controls/pause", {
-                    method: 'POST'
-                }).then((res) => {
-                    document.getElementById("play").innerText = "Play";
-                }).catch((err) => {
-                    console.log(JSON.stringify(err));
-                    pause = false;
-                })
-            } else {
-                fetch(url + "/controls/start", {
-                    method: 'POST'
-                }).then((res) => {
-                    document.getElementById("play").innerText = "Pause";
-                }).catch((err) => {
-                    console.log(JSON.stringify(err));
-                    pause = true;
-                })
-            }
-        }
-
-    </script>
-
+    <link rel="stylesheet" href="css/styles.css" />
 </head>
 
 <body onload="getFiles()">
@@ -133,7 +24,7 @@
                 <button type="button" class="form-control btn btn-secondary" onclick="getFiles()">Refresh</button>
             </div>
         </div>
-        <div id="fileList" class="list-group">
+        <div id="fileList" class="list-group overflow-auto">
         </div>
     </div>
     <div class="container">
@@ -145,6 +36,18 @@
             <button id="play" class="col-sm-6 btn btn-primary" onclick="togglePlay()">Play</button>
         </div>
     </div>
+    <div class="container">
+        <div id="playback-container" class="rounded overflow-hidden mb-2"></div>
+    </div>
+
+    <!-- Javascript -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r83/three.min.js"></script>
+    <script type="text/javascript" src="js/lib/TrackballControls.js"></script>
+    <script type="text/javascript" src="js/lib/leap-0.6.4.js"></script>
+    <script type="text/javascript" src="js/lib/leap-plugins-0.1.12.js"></script>
+    <script type="text/javascript" src="js/lib/leap.rigged-hand-0.1.7.js"></script>
+    <script type="text/javascript" src="js/preview.js"></script>
+    <script type="text/javascript" src="js/player.js"></script>
 </body>
 
 </html>
