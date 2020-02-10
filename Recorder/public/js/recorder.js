@@ -23,13 +23,6 @@ if ((typeof (WebSocket) == 'undefined') &&
 
 // Create the socket with event handlers
 function init() {
-  // Listen to spacebar press
-  document.body.onkeyup = function (e) {
-    if (e.keyCode == 32 || e.key === ' ') {
-      toggleRecording();
-    }
-  }
-
   // Create and open the socket
   ws = new WebSocket("ws://localhost:6437/v6.json");
 
