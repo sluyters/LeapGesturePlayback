@@ -12,6 +12,10 @@ function getFiles() {
         return res.json();
     }).then((jsonData) => {
         var files = jsonData["files"];
+        // Correctly sort files by filename (http://fuzzytolerance.info/blog/2019/07/19/The-better-way-to-do-natural-sort-in-JavaScript/)
+        files.sort(function (a, b) {
+            return a.localeCompare(b, navigator.languages[0] || navigator.language, {numeric: true, ignorePunctuation: true});
+        })
         displayFiles(files);
         console.log(JSON.stringify(jsonData));
     }).catch((err) => {
