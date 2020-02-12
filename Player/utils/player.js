@@ -28,12 +28,14 @@ class RecordingPlayer {
             }
         }
         var data = this.frames[this.currentFrame++];
+        var framerate = data["currentFrameRate"];
+        var msInterval = 1000 / framerate;
         this.clients.sendToClients(JSON.stringify(data))
         if (!this.stopped) {
             var _this = this;
             setTimeout(function () {
                 _this.playFile();
-            }, 10);
+            }, msInterval);
         }
     }
 }
