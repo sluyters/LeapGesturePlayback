@@ -64,7 +64,7 @@ function selectFile(nodeId) {
         selectedNode.classList.add("active");
         selectedFileId = nodeId;
 
-        fetch(url + "/controls/play/" + newSelectedFile, {
+        fetch(url + "/controls/play/" + encodeURIComponent(newSelectedFile), {
             method: 'POST'
         }).then((res) => {
             if (!pause) {

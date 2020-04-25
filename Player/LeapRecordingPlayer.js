@@ -124,7 +124,7 @@ app.post('/controls/focus', function (req, res) {
 
 })
 app.post('/controls/play/:filename', function (req, res) {
-  var filename = req.params.filename;
+  var filename = decodeURIComponent(req.params.filename);
   var filePath = path.join(recordingsDirectoryPath, filename);
   fs.readFile(filePath, { encoding: 'utf-8' }, function (err, data) {
     if (!err) {
